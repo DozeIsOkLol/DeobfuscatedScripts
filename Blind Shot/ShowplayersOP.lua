@@ -5,6 +5,7 @@
 	Cracked by: SouljaWitchSrc
 
     This script shows where players are facing/show invisible players
+	(Head Laser, Head Box, Show Players)
 
     -- Refactored for readability --
 ]]
