@@ -1,19 +1,29 @@
---[[ 
-such a simple script
-https://scriptblox.com/script/Blind-Shot-Show-players-OP-75953
+--[[
+    Original Script: Blind Shot Show players OP
+    Source: https://scriptblox.com/script/Blind-Shot-Show-players-OP-75953
+    Author: Succuh (https://scriptblox.com/u/Succuh)
+	Cracked by: SouljaWitchSrc
 
-Script by Succuh (https://scriptblox.com/u/Succuh)
+    This script shows where players are facing/show invisible players
+
+    -- Refactored for readability --
 ]]
-local vu1 = game:GetService("Players")
-local v2 = game:GetService("RunService")
-local v3 = game:GetService("UserInputService")
-game:GetService("TweenService")
-local vu4 = game:GetService("ReplicatedStorage")
-local vu5 = game:GetService("CoreGui")
-local vu6 = vu1.LocalPlayer
-local v7 = workspace.CurrentCamera
-local vu8 = {
-    laserLen = 55,
+
+--// Services //--
+local playersService = game:GetService("Players")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local tweenService = game:GetService("TweenService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local coreGui = game:GetService("CoreGui")
+
+--// Local Player & Camera //--
+local localPlayer = playersService.LocalPlayer
+local camera = workspace.CurrentCamera
+
+--// Configuration Settings //--
+local settings = {
+    laserLength = 55,
     laserWidth = 0.25,
     laserGlow = 0.75,
     laserColor = Color3.fromRGB(255, 0, 0),
@@ -21,233 +31,265 @@ local vu8 = {
     revealColor = Color3.fromRGB(255, 0, 255),
     boxTransparency = 0
 }
-local vu9 = {
+
+--// Feature Toggles //--
+local toggles = {
     laser = false,
     headBox = false,
     reveal = false
 }
-local vu10 = Instance.new("ScreenGui")
-vu10.Name = "BlindShot OP"
+
+--// Main GUI Setup //--
+local mainGui = Instance.new("ScreenGui")
+mainGui.Name = "BlindShot OP Refactored"
+-- Attempt to parent to CoreGui, otherwise fallback to PlayerGui
 pcall(function()
-    vu10.Parent = vu5
+    mainGui.Parent = coreGui
 end)
-if not vu10.Parent then
-    vu10.Parent = vu6:WaitForChild("PlayerGui")
+if not mainGui.Parent then
+    mainGui.Parent = localPlayer:WaitForChild("PlayerGui")
 end
-local vu11 = Instance.new("ImageLabel")
-vu11.Parent = vu10
-vu11.Size = UDim2.new(0, 250, 0, 220)
-vu11.Position = UDim2.new(0.1, 0, 0.1, 0)
-vu11.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-vu11.BorderSizePixel = 2
-vu11.BorderColor3 = Color3.fromRGB(255, 0, 0)
-vu11.Image = ""
-vu11.ScaleType = Enum.ScaleType.Slice
-local v12 = Instance.new("Frame")
-v12.Parent = vu11
-v12.Size = UDim2.new(1, 0, 0, 25)
-v12.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-v12.BackgroundTransparency = 0.5
-local v13 = Instance.new("TextLabel")
-v13.Parent = v12
-v13.Size = UDim2.new(0.8, 0, 1, 0)
-v13.BackgroundTransparency = 1
-v13.Font = Enum.Font.Code
-v13.TextSize = 14
-v13.TextColor3 = Color3.new(1, 1, 1)
-v13.Text = "KUPALZ ESP"
-local vu14 = Instance.new("TextButton")
-vu14.Parent = v12
-vu14.Size = UDim2.new(0.15, 0, 1, 0)
-vu14.Position = UDim2.new(0.85, 0, 0, 0)
-vu14.Text = "-"
-vu14.Font = Enum.Font.Code
-vu14.TextSize = 18
-vu14.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-vu14.BackgroundTransparency = 0.5
-vu14.TextColor3 = Color3.new(1, 1, 1)
-local vu15 = Instance.new("Frame")
-vu15.Parent = vu11
-vu15.Position = UDim2.new(0, 0, 0, 30)
-vu15.Size = UDim2.new(1, 0, 1, - 30)
-vu15.BackgroundTransparency = 1
-local function v22(pu16, p17, pu18, pu19)
-    local vu20 = Instance.new("TextButton")
-    vu20.Parent = vu15
-    vu20.Size = UDim2.new(0.9, 0, 0, 30)
-    vu20.Position = UDim2.new(0.05, 0, 0.05 + p17 * 0.22, 0)
-    vu20.Font = Enum.Font.Code
-    vu20.TextSize = 14
-    vu20.TextColor3 = Color3.new(1, 1, 1)
-    vu20.BackgroundTransparency = 0.3
-    local function vu21()
-        vu20.Text = pu16 .. ": " .. (vu9[pu18] and "ON" or "OFF")
-        vu20.BackgroundColor3 = vu9[pu18] and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
+
+--// Main Window Frame //--
+local mainFrame = Instance.new("ImageLabel")
+mainFrame.Parent = mainGui
+mainFrame.Size = UDim2.new(0, 250, 0, 220)
+mainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+mainFrame.Image = ""
+mainFrame.ScaleType = Enum.ScaleType.Slice
+
+--// Title Bar //--
+local titleBar = Instance.new("Frame")
+titleBar.Parent = mainFrame
+titleBar.Size = UDim2.new(1, 0, 0, 25)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleBar.BackgroundTransparency = 0.5
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = titleBar
+titleLabel.Size = UDim2.new(0.8, 0, 1, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Font = Enum.Font.Code
+titleLabel.TextSize = 14
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.Text = "KUPALZ ESP"
+
+--// Minimize/Maximize Button //--
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Parent = titleBar
+minimizeButton.Size = UDim2.new(0.15, 0, 1, 0)
+minimizeButton.Position = UDim2.new(0.85, 0, 0, 0)
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.Code
+minimizeButton.TextSize = 18
+minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+minimizeButton.BackgroundTransparency = 0.5
+minimizeButton.TextColor3 = Color3.new(1, 1, 1)
+
+--// Options Container Frame //--
+local optionsContainer = Instance.new("Frame")
+optionsContainer.Parent = mainFrame
+optionsContainer.Position = UDim2.new(0, 0, 0, 30)
+optionsContainer.Size = UDim2.new(1, 0, 1, -30)
+optionsContainer.BackgroundTransparency = 1
+
+--// Function to create a toggle button //--
+local function createToggleButton(buttonText, index, toggleKey, callback)
+    local button = Instance.new("TextButton")
+    button.Parent = optionsContainer
+    button.Size = UDim2.new(0.9, 0, 0, 30)
+    button.Position = UDim2.new(0.05, 0, 0.05 + index * 0.22, 0)
+    button.Font = Enum.Font.Code
+    button.TextSize = 14
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.BackgroundTransparency = 0.3
+
+    local function updateButtonState()
+        button.Text = buttonText .. ": " .. (toggles[toggleKey] and "ON" or "OFF")
+        button.BackgroundColor3 = toggles[toggleKey] and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
     end
-    vu21()
-    vu20.MouseButton1Click:Connect(function()
-        vu9[pu18] = not vu9[pu18]
-        vu21()
-        if pu19 then
-            pu19()
+
+    updateButtonState() -- Set initial state
+
+    button.MouseButton1Click:Connect(function()
+        toggles[toggleKey] = not toggles[toggleKey]
+        updateButtonState()
+        if callback then
+            callback()
         end
     end)
-    return vu20
+    return button
 end
-local function v24()
-    if vu9.reveal then
-        local v23 = vu4:FindFirstChild("invisivel")
-        if v23 then
-            v23:FireServer(false)
+
+--// Function to reveal invisible players //--
+local function revealInvisiblePlayers()
+    if toggles.reveal then
+        local revealRemote = replicatedStorage:FindFirstChild("invisivel")
+        if revealRemote then
+            revealRemote:FireServer(false)
         else
-            warn("invisivel remote missing")
+            warn("'invisivel' remote event is missing in ReplicatedStorage")
         end
     end
 end
-v22("HEAD LASER", 0, "laser")
-v22("HEAD BOX", 1, "headBox")
-v22("SHOW PLAYERS", 2, "reveal", v24)
-local vu25 = nil
-local vu26 = nil
-local vu27 = nil
-v12.InputBegan:Connect(function(p28)
-    if p28.UserInputType == Enum.UserInputType.MouseButton1 then
-        vu25 = true
-        vu26 = p28.Position
-        vu27 = vu11.Position
+
+-- Create the buttons
+createToggleButton("HEAD LASER", 0, "laser")
+createToggleButton("HEAD BOX", 1, "headBox")
+createToggleButton("SHOW PLAYERS", 2, "reveal", revealInvisiblePlayers)
+
+--// GUI Dragging Logic //--
+local isDragging = false
+local dragStart
+local frameStart
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = true
+        dragStart = input.Position
+        frameStart = mainFrame.Position
     end
 end)
-v3.InputChanged:Connect(function(p29)
-    if vu25 and p29.UserInputType == Enum.UserInputType.MouseMovement then
-        local v30 = p29.Position - vu26
-        vu11.Position = UDim2.new(vu27.X.Scale, vu27.X.Offset + v30.X, vu27.Y.Scale, vu27.Y.Offset + v30.Y)
+
+userInputService.InputChanged:Connect(function(input)
+    if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(frameStart.X.Scale, frameStart.X.Offset + delta.X, frameStart.Y.Scale, frameStart.Y.Offset + delta.Y)
     end
 end)
-v3.InputEnded:Connect(function(p31)
-    if p31.UserInputType == Enum.UserInputType.MouseButton1 then
-        vu25 = false
+
+userInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        isDragging = false
     end
 end)
-local vu32 = false
-vu14.MouseButton1Click:Connect(function()
-    vu32 = not vu32
-    if vu32 then
-        vu15.Visible = false
-        vu14.Text = "+"
-        vu11:TweenSize(UDim2.new(0, 250, 0, 25), "Out", "Quad", 0.25, true)
+
+--// GUI Minimize/Maximize Logic //--
+local isMinimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        optionsContainer.Visible = false
+        minimizeButton.Text = "+"
+        mainFrame:TweenSize(UDim2.new(0, 250, 0, 25), "Out", "Quad", 0.25, true)
     else
-        vu11:TweenSize(UDim2.new(0, 250, 0, 220), "Out", "Quad", 0.25, true)
+        mainFrame:TweenSize(UDim2.new(0, 250, 0, 220), "Out", "Quad", 0.25, true)
         task.delay(0.15, function()
-            vu15.Visible = true
+            optionsContainer.Visible = true
         end)
-        vu14.Text = "-"
+        minimizeButton.Text = "-"
     end
 end)
-local vu33 = Instance.new("Folder")
-vu33.Name = "KupalzVisuals"
-vu33.Parent = v7
-local vu34 = {}
-local vu35 = CFrame.new(0, - 9999, 0)
-local function vu40(_)
-    local v36 = Instance.new("Attachment", vu33)
-    local v37 = Instance.new("Attachment", vu33)
-    local v38 = Instance.new("Beam")
-    v38.Attachment0 = v36
-    v38.Attachment1 = v37
-    v38.Width0 = vu8.laserWidth
-    v38.Width1 = vu8.laserWidth
-    v38.Color = ColorSequence.new(vu8.laserColor)
-    v38.LightEmission = vu8.laserGlow
-    v38.FaceCamera = true
-    v38.Transparency = NumberSequence.new({
+
+--// Visuals Management //--
+local visualsFolder = Instance.new("Folder")
+visualsFolder.Name = "KupalzVisuals"
+visualsFolder.Parent = camera
+
+local playerVisuals = {}
+local offscreenCFrame = CFrame.new(0, -9999, 0)
+
+-- Function to create visual elements for a player
+local function createVisualsForPlayer(player)
+    local attachment0 = Instance.new("Attachment", visualsFolder)
+    local attachment1 = Instance.new("Attachment", visualsFolder)
+
+    local beam = Instance.new("Beam")
+    beam.Attachment0 = attachment0
+    beam.Attachment1 = attachment1
+    beam.Width0 = settings.laserWidth
+    beam.Width1 = settings.laserWidth
+    beam.Color = ColorSequence.new(settings.laserColor)
+    beam.LightEmission = settings.laserGlow
+    beam.FaceCamera = true
+    beam.Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0),
         NumberSequenceKeypoint.new(1, 1)
     })
-    v38.Parent = vu33
-    local v39 = Instance.new("Part")
-    v39.Anchored = true
-    v39.CanCollide = false
-    v39.Material = Enum.Material.Neon
-    v39.Size = Vector3.new(1.3, 1.3, 1.3)
-    v39.Color = vu8.headBoxColor
-    v39.Transparency = vu8.boxTransparency
-    v39.CastShadow = false
-    v39.CFrame = vu35
-    v39.Parent = vu33
+    beam.Parent = visualsFolder
+
+    local headBoxPart = Instance.new("Part")
+    headBoxPart.Anchored = true
+    headBoxPart.CanCollide = false
+    headBoxPart.Material = Enum.Material.Neon
+    headBoxPart.Size = Vector3.new(1.3, 1.3, 1.3)
+    headBoxPart.Color = settings.headBoxColor
+    headBoxPart.Transparency = settings.boxTransparency
+    headBoxPart.CastShadow = false
+    headBoxPart.CFrame = offscreenCFrame
+    headBoxPart.Parent = visualsFolder
+
     return {
-        a0 = v36,
-        a1 = v37,
-        beam = v38,
-        box = v39
+        beamAttachment0 = attachment0,
+        beamAttachment1 = attachment1,
+        beam = beam,
+        box = headBoxPart
     }
 end
-v2.RenderStepped:Connect(function()
-    local v41 = vu1
-    local v42, v43, v44 = ipairs(v41:GetPlayers())
-    while true do
-        local v45
-        v44, v45 = v42(v43, v44)
-        if v44 == nil then
-            break
-        end
-        if v45 ~= vu6 then
-            vu34[v45] = vu34[v45] or vu40(v45)
-            local v46 = vu34[v45]
-            local v47 = v45.Character
-            local v48
-            if v47 then
-                v48 = v47:FindFirstChild("Head")
-            else
-                v48 = v47
+
+--// Main Render Loop //--
+runService.RenderStepped:Connect(function()
+    for _, player in ipairs(playersService:GetPlayers()) do
+        if player ~= localPlayer then
+            -- Create visuals for the player if they don't exist
+            if not playerVisuals[player] then
+                playerVisuals[player] = createVisualsForPlayer(player)
             end
-            if v48 then
-                if vu9.laser then
-                    v46.a0.WorldPosition = v48.Position
-                    v46.a1.WorldPosition = v48.Position + v48.CFrame.LookVector * vu8.laserLen
-                    v46.beam.Enabled = true
+
+            local visuals = playerVisuals[player]
+            local character = player.Character
+            local head = character and character:FindFirstChild("Head")
+
+            if head then
+                -- Update laser
+                if toggles.laser then
+                    visuals.beamAttachment0.WorldPosition = head.Position
+                    visuals.beamAttachment1.WorldPosition = head.Position + head.CFrame.LookVector * settings.laserLength
+                    visuals.beam.Enabled = true
                 else
-                    v46.beam.Enabled = false
+                    visuals.beam.Enabled = false
                 end
-                if vu9.headBox then
-                    v46.box.CFrame = v48.CFrame
+
+                -- Update head box
+                if toggles.headBox then
+                    visuals.box.CFrame = head.CFrame
                 else
-                    v46.box.CFrame = vu35
+                    visuals.box.CFrame = offscreenCFrame
                 end
-                if vu9.reveal then
-                    local v49, v50, v51 = ipairs(v47:GetChildren())
-                    while true do
-                        local v52
-                        v51, v52 = v49(v50, v51)
-                        if v51 == nil then
-                            break
-                        end
-                        if v52:IsA("BasePart") and v52.Transparency > 0.5 then
-                            v52.Transparency = 0
-                            v52.Material = Enum.Material.ForceField
-                            v52.Color = vu8.revealColor
+
+                -- Update player visibility (reveal)
+                if toggles.reveal then
+                    for _, part in ipairs(character:GetChildren()) do
+                        if part:IsA("BasePart") and part.Transparency > 0.5 then
+                            part.Transparency = 0
+                            part.Material = Enum.Material.ForceField
+                            part.Color = settings.revealColor
                         end
                     end
                 end
             else
-                v46.beam.Enabled = false
-                v46.box.CFrame = vu35
+                -- Hide visuals if player has no head/character
+                visuals.beam.Enabled = false
+                visuals.box.CFrame = offscreenCFrame
             end
         end
     end
 end)
-vu1.PlayerRemoving:Connect(function(p53)
-    local v54 = vu34[p53]
-    if v54 then
-        local v55, v56, v57 = pairs(v54)
-        while true do
-            local v58
-            v57, v58 = v55(v56, v57)
-            if v57 == nil then
-                break
-            end
-            v58:Destroy()
+
+--// Player Removal Cleanup //--
+playersService.PlayerRemoving:Connect(function(player)
+    local visuals = playerVisuals[player]
+    if visuals then
+        -- Destroy all visual parts associated with the player
+        for _, visualPart in pairs(visuals) do
+            visualPart:Destroy()
         end
-        vu34[p53] = nil
+        playerVisuals[player] = nil -- Remove from the table
     end
 end)
-v24()
+
+-- Initial call to reveal players if the option is on by default
+revealInvisiblePlayers()
